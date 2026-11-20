@@ -35,8 +35,10 @@ facts:
       src: readme.md:310
       match: "[chalk-template](https://github.com/chalk/chalk-template)"
       note: >-
-        chalk.red`a ${x}` is not supported. With interpolation it joins the raw
-        string array, e.g. chalk.green`Hello ${name}` yields "Hello , Sindre".
+        chalk.red`a ${x}` is not supported. With interpolation the raw string
+        array is coerced and the values are appended after a space, e.g.
+        chalk.green`Hello ${name}` yields "Hello , Sindre". The values are
+        misplaced, not discarded.
     - id: no_runtime_dependencies
       value: Chalk has no dependencies.
       src: readme.md:298
@@ -47,10 +49,24 @@ facts:
       note: ansi-styles and supports-color are vendored under source/vendor, not installed.
 
   color_level:
+    - id: style_access_returns_new_builder
+      value: Each style property access or color method call returns a NEW builder function, cached on its parent. It never returns `this`.
+      src: source/index.js:71
+      match: "const builder = createBuilder(this, createStyler(style.open, style.close, this[STYLER]), this[IS_EMPTY]);"
+      note: new Chalk({level:1}).red === instance is false, and so is .hex('#fff') === instance.
+    - id: style_conflict_last_wins
+      value: Later styles open after earlier ones, so the last conflicting style in a chain wins. chalk.yellow.red renders red and chalk.red.yellow renders yellow.
+      src: source/index.js:159
+      match: "openAll = parent.openAll + open;"
     - id: level_range_error
       value: The `level` should be an integer from 0 to 3
       src: source/index.js:19
       match: "throw new Error('The `level` should be an integer from 0 to 3');"
+    - id: force_color_overrides_flags
+      value: An env FORCE_COLOR value replaces the --color/--no-color flag result, so FORCE_COLOR=1 with --no-color gives level 1.
+      src: source/vendor/supports-color/index.js:72-75
+      match: "flagForceColor = noFlagForceColor;"
+      note: --no-color does not disable color "unconditionally". Only --color=256 and --color=16m beat a non-zero FORCE_COLOR.
     - id: flag_force_disable
       value: --no-color
       src: source/vendor/supports-color/index.js:18
@@ -92,7 +108,7 @@ facts:
       src: source/vendor/supports-color/browser.js:13
       match: "/\\b(?:Chrome|Chromium)\\//.test(globalThis.navigator.userAgent)"
     - id: browser_entry_condition
-      value: The browser detector is selected by the "default" condition of #supports-color. There is no "browser" condition.
+      value: The browser detector is selected by the "default" condition of the #supports-color entry in package.json "imports" (not "exports"). There is no "browser" condition.
       src: package.json:17
       match: '"default": "./source/vendor/supports-color/browser.js"'
       near: '"#supports-color"'
