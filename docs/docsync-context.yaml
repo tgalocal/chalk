@@ -1,0 +1,84 @@
+# Anchored facts for git2docs. Exact strings the docs must reproduce that are
+# not derivable from extracted surfaces. Every entry is anchored to its source.
+
+authority:
+  # Pointers, never copies. These surfaces are extracted directly.
+  public_types: source/index.d.ts
+  style_names: source/vendor/ansi-styles/index.js
+  package_manifest: package.json
+
+facts:
+  compatibility:
+    - id: node_engine
+      value: ">=22"
+      src: package.json:22
+      match: '"node": ">=22"'
+    - id: ci_tested_node_26
+      value: 26
+      src: .github/workflows/main.yml:13
+      match: "- 26"
+      note: CI tests only Node 26 and 22. Other versions are not tested.
+    - id: ci_tested_node_22
+      value: 22
+      src: .github/workflows/main.yml:14
+      match: "- 22"
+    - id: module_format
+      value: ESM only
+      src: package.json:8
+      match: '"type": "module"'
+      note: There is no CommonJS build, so docs must not show require('chalk').
+    - id: no_runtime_dependencies
+      value: Chalk has no dependencies.
+      src: readme.md:298
+      match: Chalk has no dependencies.
+      src_files:
+        - source/vendor/ansi-styles/index.js
+        - source/vendor/supports-color/index.js
+      note: ansi-styles and supports-color are vendored under source/vendor, not installed.
+
+  color_level:
+    - id: level_range_error
+      value: The `level` should be an integer from 0 to 3
+      src: source/index.js:19
+      match: "throw new Error('The `level` should be an integer from 0 to 3');"
+    - id: flag_force_disable
+      value: --no-color
+      src: source/vendor/supports-color/index.js:18
+      match: "hasFlag('no-color')"
+    - id: flag_force_enable
+      value: --color
+      src: source/vendor/supports-color/index.js:25
+      match: "\thasFlag('color')"
+    - id: flag_256
+      value: --color=256
+      src: source/vendor/supports-color/index.js:90
+      match: "hasFlag('color=256')"
+    - id: flag_truecolor
+      value: --color=16m
+      src: source/vendor/supports-color/index.js:84
+      match: "hasFlag('color=16m')"
+    - id: force_color_true_enables_without_level
+      value: FORCE_COLOR=true
+      src: source/vendor/supports-color/index.js:47
+      match: "env.FORCE_COLOR === 'true'"
+      note: true (or empty) only enables color at level 1 or above. A numeric value sets the level exactly.
+    - id: force_color_numeric_cap
+      value: numeric FORCE_COLOR is capped at 3
+      src: source/vendor/supports-color/index.js:55
+      match: "Math.min(Number.parseInt(env.FORCE_COLOR, 10), 3)"
+
+  browser:
+    - id: browser_entry
+      value: ./source/vendor/supports-color/browser.js
+      src: package.json:17
+      match: '"default": "./source/vendor/supports-color/browser.js"'
+      note: Non-Node runtimes get the browser color detector through the #supports-color import condition.
+    - id: browser_truecolor_threshold
+      value: Chromium brand version > 93 gives level 3
+      src: source/vendor/supports-color/browser.js:8
+      match: "brand?.version > 93"
+    - id: browser_console_support
+      value: Since Chrome 69, ANSI escape codes are natively supported in the developer console.
+      src: readme.md:282
+      match: Since Chrome 69
+      note: This is the repo's own prose and is authoritative here.
