@@ -75,6 +75,7 @@ facts:
       value: --color
       src: source/vendor/supports-color/index.js:25
       match: "\thasFlag('color')"
+      note: --color guarantees at least level 1 (and color on non-TTY streams). It does not cap the level; detection continues, e.g. TERM=xterm-256color gives 2.
     - id: flag_256
       value: --color=256
       src: source/vendor/supports-color/index.js:90
