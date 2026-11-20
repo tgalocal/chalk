@@ -26,7 +26,17 @@ facts:
       value: ESM only
       src: package.json:8
       match: '"type": "module"'
-      note: There is no CommonJS build, so docs must not show require('chalk').
+      note: >-
+        There is no CommonJS build. Do not claim require('chalk') can never work.
+        On Node >=22.12, require('chalk') loads the ESM module (the default export
+        is .default). Only earlier Node 22 releases throw ERR_REQUIRE_ESM.
+    - id: no_tagged_templates_in_core
+      value: Tagged template literals are provided by chalk-template, not by chalk itself.
+      src: readme.md:310
+      match: "[chalk-template](https://github.com/chalk/chalk-template)"
+      note: >-
+        chalk.red`a ${x}` is not supported. With interpolation it joins the raw
+        string array, e.g. chalk.green`Hello ${name}` yields "Hello , Sindre".
     - id: no_runtime_dependencies
       value: Chalk has no dependencies.
       src: readme.md:298
@@ -77,6 +87,15 @@ facts:
       value: Chromium brand version > 93 gives level 3
       src: source/vendor/supports-color/browser.js:8
       match: "brand?.version > 93"
+    - id: browser_chrome_user_agent_fallback
+      value: Any other Chrome/Chromium user agent gives level 1. Only a runtime without navigator, or a non-Chromium browser, gives level 0.
+      src: source/vendor/supports-color/browser.js:13
+      match: "/\\b(?:Chrome|Chromium)\\//.test(globalThis.navigator.userAgent)"
+    - id: browser_entry_condition
+      value: The browser detector is selected by the "default" condition of #supports-color. There is no "browser" condition.
+      src: package.json:17
+      match: '"default": "./source/vendor/supports-color/browser.js"'
+      near: '"#supports-color"'
     - id: browser_console_support
       value: Since Chrome 69, ANSI escape codes are natively supported in the developer console.
       src: readme.md:282
